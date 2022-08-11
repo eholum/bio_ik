@@ -1470,6 +1470,7 @@ class RobotFK_MoveIt : RobotFK_Jacobian
     moveit::core::RobotModelConstPtr robot_model;
     moveit::core::RobotState robot_state;
     std::vector<Frame> tipFrames;
+    std::vector<Eigen::Isometry3d> eigen_frames;
     std::vector<const moveit::core::LinkModel*> tipLinks;
     std::vector<double> jj;
 
@@ -1484,6 +1485,7 @@ public:
     {
         tipFrames.resize(tip_link_indices.size());
         tipLinks.resize(tip_link_indices.size());
+        eigen_frames.resize(tip_link_indices.size());
         for(size_t i = 0; i < tip_link_indices.size(); i++)
             tipLinks[i] = robot_model->getLinkModel(tip_link_indices[i]);
     }
@@ -1495,7 +1497,10 @@ public:
         robot_state.setVariablePositions(jj);
         robot_state.update();
         for(size_t i = 0; i < tipFrames.size(); i++)
-            tipFrames[i] = Frame(robot_state.getGlobalLinkTransform(tipLinks[i]));
+        {
+            eigen_frames[i] = robot_state.getGlobalLinkTransform(tipLinks[i]);
+            tipFrames[i] = Frame(eigen_frames[i]);
+        }
     }
     inline void incrementalBegin(const std::vector<double>& jj) {}
     inline void incrementalEnd() {}
