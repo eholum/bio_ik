@@ -60,6 +60,7 @@ struct IKParams
 {
     moveit::core::RobotModelConstPtr robot_model;
     const moveit::core::JointModelGroup* joint_model_group;
+    std::string group_name;
 
     // IKParallel parameters
     std::string solver_class_name;

@@ -202,6 +202,7 @@ struct BioIKKinematicsPlugin : kinematics::KinematicsBase {
 
     ikparams.robot_model = robot_model_;
     ikparams.joint_model_group = joint_model_group;
+    ikparams.group_name = group_name;
 
     // initialize parameters for IKParallel
     getRosParam("mode", ikparams.solver_class_name,

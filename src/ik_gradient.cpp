@@ -137,15 +137,18 @@ template <int if_stuck, size_t threads> struct IKGradientDescent : IKBase
 {
     std::vector<double> solution, best_solution, gradient, temp;
     bool reset;
+    RobotFK_MoveIt moveit_robot_model_;
 
     IKGradientDescent(const IKParams& p)
         : IKBase(p)
+        , moveit_robot_model_(p.robot_model, p.group_name)
     {
     }
 
     void initialize(const Problem& problem)
     {
         IKBase::initialize(problem);
+        moveit_robot_model_.initialize(problem.tip_link_indices);
         solution = problem.initial_guess;
         if(thread_index > 0)
             for(auto& vi : problem.active_variables)
@@ -155,6 +158,12 @@ template <int if_stuck, size_t threads> struct IKGradientDescent : IKBase
     }
 
     const std::vector<double>& getSolution() const { return best_solution; }
+
+    double computeFitness(const std::vector<double>& variable_positions) override
+    {
+        moveit_robot_model_.applyConfiguration(variable_positions);
+        return IKBase::computeFitness(variable_positions, moveit_robot_model_.getTipFrames());
+    }
 
     void step()
     {

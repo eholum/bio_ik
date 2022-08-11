@@ -1465,7 +1465,7 @@ typedef RobotFK_Mutator RobotFK;
 #endif
 
 // for comparison
-class RobotFK_MoveIt
+class RobotFK_MoveIt : RobotFK_Jacobian
 {
     moveit::core::RobotModelConstPtr robot_model;
     moveit::core::RobotState robot_state;
@@ -1475,7 +1475,8 @@ class RobotFK_MoveIt
 
 public:
     RobotFK_MoveIt(moveit::core::RobotModelConstPtr model)
-        : robot_model(model)
+        : RobotFK_Jacobian(model)
+        , robot_model(model)
         , robot_state(model)
     {
     }

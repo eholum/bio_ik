@@ -127,86 +127,87 @@ struct Random
 
 struct IKBase : Random
 {
-    IKParams params;
-    RobotFK model;
-    RobotInfo modelInfo;
-    int thread_index;
-    Problem problem;
-    std::vector<Frame> null_tip_frames;
-    volatile int canceled;
+    public:
+        IKParams params;
+        RobotFK model;
+        RobotInfo modelInfo;
+        int thread_index;
+        Problem problem;
+        std::vector<Frame> null_tip_frames;
+        volatile int canceled;
 
-    virtual void step() = 0;
+        virtual void step() = 0;
 
-    virtual const std::vector<double>& getSolution() const = 0;
+        virtual const std::vector<double>& getSolution() const = 0;
 
-    virtual void setParams(const IKParams& p) {}
+        virtual void setParams(const IKParams& p) {}
 
-    IKBase(const IKParams& p)
-        : Random(p.random_seed)
-        , model(p.robot_model)
-        , modelInfo(p.robot_model)
-        , params(p)
-    {
-        setParams(p);
-    }
-    virtual ~IKBase() {}
+        IKBase(const IKParams& p)
+            : Random(p.random_seed)
+            , model(p.robot_model)
+            , modelInfo(p.robot_model)
+            , params(p)
+        {
+            setParams(p);
+        }
+        virtual ~IKBase() {}
 
-    virtual void initialize(const Problem& problem)
-    {
-        this->problem = problem;
-        this->problem.initialize2();
-        model.initialize(problem.tip_link_indices);
-        // active_variables = problem.active_variables;
-        null_tip_frames.resize(problem.tip_link_indices.size());
-    }
+        virtual void initialize(const Problem& problem)
+        {
+            this->problem = problem;
+            this->problem.initialize2();
+            model.initialize(problem.tip_link_indices);
+            // active_variables = problem.active_variables;
+            null_tip_frames.resize(problem.tip_link_indices.size());
+        }
 
-    double computeSecondaryFitnessActiveVariables(const double* active_variable_positions) { return problem.computeGoalFitness(problem.secondary_goals, null_tip_frames.data(), active_variable_positions); }
+        double computeSecondaryFitnessActiveVariables(const double* active_variable_positions) { return problem.computeGoalFitness(problem.secondary_goals, null_tip_frames.data(), active_variable_positions); }
 
-    double computeSecondaryFitnessAllVariables(const std::vector<double>& variable_positions) { return computeSecondaryFitnessActiveVariables(extractActiveVariables(variable_positions)); }
+        double computeSecondaryFitnessAllVariables(const std::vector<double>& variable_positions) { return computeSecondaryFitnessActiveVariables(extractActiveVariables(variable_positions)); }
 
-    double computeFitnessActiveVariables(const std::vector<Frame>& tip_frames, const double* active_variable_positions) { return problem.computeGoalFitness(problem.goals, tip_frames.data(), active_variable_positions); }
+        double computeFitnessActiveVariables(const std::vector<Frame>& tip_frames, const double* active_variable_positions) { return problem.computeGoalFitness(problem.goals, tip_frames.data(), active_variable_positions); }
 
-    double computeFitnessActiveVariables(const aligned_vector<Frame>& tip_frames, const double* active_variable_positions) { return problem.computeGoalFitness(problem.goals, tip_frames.data(), active_variable_positions); }
+        double computeFitnessActiveVariables(const aligned_vector<Frame>& tip_frames, const double* active_variable_positions) { return problem.computeGoalFitness(problem.goals, tip_frames.data(), active_variable_positions); }
 
-    double computeCombinedFitnessActiveVariables(const std::vector<Frame>& tip_frames, const double* active_variable_positions)
-    {
-        double ret = 0.0;
-        ret += problem.computeGoalFitness(problem.goals, tip_frames.data(), active_variable_positions);
-        ret += problem.computeGoalFitness(problem.secondary_goals, null_tip_frames.data(), active_variable_positions);
-        return ret;
-    }
+        double computeCombinedFitnessActiveVariables(const std::vector<Frame>& tip_frames, const double* active_variable_positions)
+        {
+            double ret = 0.0;
+            ret += problem.computeGoalFitness(problem.goals, tip_frames.data(), active_variable_positions);
+            ret += problem.computeGoalFitness(problem.secondary_goals, null_tip_frames.data(), active_variable_positions);
+            return ret;
+        }
 
-    double computeCombinedFitnessActiveVariables(const aligned_vector<Frame>& tip_frames, const double* active_variable_positions)
-    {
-        double ret = 0.0;
-        ret += problem.computeGoalFitness(problem.goals, tip_frames.data(), active_variable_positions);
-        ret += problem.computeGoalFitness(problem.secondary_goals, null_tip_frames.data(), active_variable_positions);
-        return ret;
-    }
+        double computeCombinedFitnessActiveVariables(const aligned_vector<Frame>& tip_frames, const double* active_variable_positions)
+        {
+            double ret = 0.0;
+            ret += problem.computeGoalFitness(problem.goals, tip_frames.data(), active_variable_positions);
+            ret += problem.computeGoalFitness(problem.secondary_goals, null_tip_frames.data(), active_variable_positions);
+            return ret;
+        }
 
-    bool checkSolutionActiveVariables(const std::vector<Frame>& tip_frames, const double* active_variable_positions) { return problem.checkSolutionActiveVariables(tip_frames, active_variable_positions); }
+        bool checkSolutionActiveVariables(const std::vector<Frame>& tip_frames, const double* active_variable_positions) { return problem.checkSolutionActiveVariables(tip_frames, active_variable_positions); }
 
-    bool checkSolution(const std::vector<double>& variable_positions, const std::vector<Frame>& tips) { return checkSolutionActiveVariables(tips, extractActiveVariables(variable_positions)); }
+        bool checkSolution(const std::vector<double>& variable_positions, const std::vector<Frame>& tips) { return checkSolutionActiveVariables(tips, extractActiveVariables(variable_positions)); }
 
-    std::vector<double> temp_active_variable_positions;
+        std::vector<double> temp_active_variable_positions;
 
-    double* extractActiveVariables(const std::vector<double>& variable_positions)
-    {
-        temp_active_variable_positions.resize(problem.active_variables.size());
-        for(size_t i = 0; i < temp_active_variable_positions.size(); i++)
-            temp_active_variable_positions[i] = variable_positions[problem.active_variables[i]];
-        return temp_active_variable_positions.data();
-    }
+        double* extractActiveVariables(const std::vector<double>& variable_positions)
+        {
+            temp_active_variable_positions.resize(problem.active_variables.size());
+            for(size_t i = 0; i < temp_active_variable_positions.size(); i++)
+                temp_active_variable_positions[i] = variable_positions[problem.active_variables[i]];
+            return temp_active_variable_positions.data();
+        }
 
-    double computeFitness(const std::vector<double>& variable_positions, const std::vector<Frame>& tip_frames) { return computeFitnessActiveVariables(tip_frames, extractActiveVariables(variable_positions)); }
+        virtual double computeFitness(const std::vector<double>& variable_positions, const std::vector<Frame>& tip_frames) { return computeFitnessActiveVariables(tip_frames, extractActiveVariables(variable_positions)); }
 
-    double computeFitness(const std::vector<double>& variable_positions)
-    {
-        model.applyConfiguration(variable_positions);
-        return computeFitness(variable_positions, model.getTipFrames());
-    }
+        virtual double computeFitness(const std::vector<double>& variable_positions)
+        {
+            model.applyConfiguration(variable_positions);
+            return computeFitness(variable_positions, model.getTipFrames());
+        }
 
-    virtual size_t concurrency() const { return 1; }
+        virtual size_t concurrency() const { return 1; }
 };
 
 typedef IKBase IKSolver;
