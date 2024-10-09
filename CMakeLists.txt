@@ -117,11 +117,8 @@ ament_target_dependencies(
 target_link_libraries(
   ${PROJECT_NAME}
   PUBLIC
-  ${FANN_LIBRARIES}
-  ${OpenMP_LIBS}
-
-  -static-libgcc
-  -static-libstdc++
+    ${FANN_LIBRARIES}
+    ${OpenMP_LIBS}
 )
 
 add_library(${PROJECT_NAME}_plugin SHARED
